@@ -2,7 +2,7 @@
 
 > dApp de importação de itens de alto valor (carros, bebidas, relógios) com custódia do pagamento em etapas e certificado de autenticidade por hash, na rede de teste Ethereum Sepolia.
 
-🔗 **dApp (Vercel):** <<PREENCHER: https://NOME.vercel.app>>
+🔗 **dApp (Vercel):** https://importachain-frontend.vercel.app
 📜 **Contrato (Sepolia):** [0x9Ca0D97075997a044Bc7e6bee87E69680d980919](https://sepolia.etherscan.io/address/0x9Ca0D97075997a044Bc7e6bee87E69680d980919)
 🎥 **Vídeo de demonstração:** <<PREENCHER: link>>
 
