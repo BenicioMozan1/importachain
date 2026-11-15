@@ -135,16 +135,58 @@ Observação: as operações que **criam armazenamento novo** (deploy, cadastro,
 ---
 
 ## 9. Frontend: funcionalidades
-<<THIAGO>>
+
+HTML, CSS e JavaScript puros, com a Web3.js 4.x via CDN. Toda a lógica fica em `frontend/app.js`; a ABI e o endereço ficam em `frontend/contrato.js`.
+
+| # | Requisito do guia | Como foi implementado (`app.js`) |
+| --- | --- | --- |
+| 1 | Conectar carteira, mostrar endereço e saldo | `conectar()` pede `eth_requestAccounts`; `atualizarCabecalho()` mostra o endereço curto e o saldo (`web3.eth.getBalance` → `fromWei`). Se a conta já foi autorizada, `init()` conecta sozinho com `eth_accounts`. |
+| 2 | Verificação e troca de rede | `verificarRede()` compara o `eth_chainId` com `0xaa36a7`; fora da Sepolia mostra o aviso e desabilita as ações. `trocarRede()` usa `wallet_switchEthereumChain` (e `wallet_addEthereumChain` se o erro for 4902). |
+| 3 | Leitura com `.call()` | `carregarTudo()` chama em paralelo `carregarPapel`, `carregarTotais`, `carregarItens` (vitrine com `getItem`), `carregarMeusItens`, `carregarPedidosComprador`, `carregarPedidosImportador`, `carregarAlfandega`, `carregarSaldo`, `carregarAdmin` e `carregarEventos`. |
+| 4 | Escrita com `.send()` e envio de ETH | Todas as escritas passam por `enviarTx()`. `comprar(itemId)` envia `value: item.preco` (BigInt direto, sem perder precisão). |
+| 5 | Hash da transação, link e estado | `enviarTx()` usa os eventos do PromiEvent: `transactionHash` → "pendente", `receipt` → "confirmada", `catch` → "falhou". `mostrarTx()` mostra o estado e o link para o Sepolia Etherscan. |
+| 6 | Tratamento de erros | `enviarTx()` confere o saldo da carteira antes e simula com `.call()` antes do `.send()`, pegando o revert sem abrir a MetaMask. `traduzirErro()` reconhece rejeição (código 4001), os 7 erros personalizados com seus valores (pelo `errorName` decodificado pela ABI ou pelo seletor dos 4 primeiros bytes), os textos de `require` e falta de saldo. |
+| 7 | Eventos | `carregarEventos()` usa `getPastEvents('allEvents')` a partir do bloco do deploy; mostra os 30 mais recentes com link para a transação. É recarregado depois de cada transação confirmada. |
+| 8 | Interface do dono | `carregarPapel()` compara `dono()` com a conta e mostra o Painel do Dono (pausar, verificadores, disputas) só para ele; a seção de alfândega aparece só para verificadores. A segurança real fica no contrato (`apenasDono`, `apenasVerificador`). |
+| 9 | Troca de conta e de rede | `accountsChanged` → `aoTrocarConta()` atualiza a conta e recarrega tudo; `chainChanged` → `aoTrocarRede()` recarrega a página. |
+
+Outros cuidados: event delegation nas listas (botões gerados no JS como `comprar-<id>`), nomes de itens escapados com `escaparHtml()` (contra XSS), botão desabilitado com `.carregando` durante a transação, e o identificador do item normalizado (`trim` + maiúsculas) em `hashDoTexto()` antes de gerar o hash com `gerarHash` do próprio contrato.
 
 ## 10. Como executar localmente
-<<THIAGO>>
+
+```
+git clone https://github.com/BenicioMozan1/importachain.git
+cd importachain
+npx serve frontend        # ou Live Server no VS Code
+# abrir http://localhost:3000 no Chrome com a MetaMask
+```
+
+A MetaMask não funciona com o `index.html` aberto direto como arquivo (`file://`): é preciso servir a pasta `frontend`.
 
 ## 11. Como configurar a MetaMask na Sepolia
-<<THIAGO>>
+
+1. Instale a extensão MetaMask (https://metamask.io) e crie uma carteira **só para testes**.
+2. No seletor de redes da MetaMask, ative **"Mostrar redes de teste"**.
+3. Selecione a rede **Sepolia** (Chain ID 11155111). Se a dApp abrir em outra rede, clique em "Trocar para Sepolia".
+4. Pegue SepoliaETH em um faucet da Sepolia.
+5. Nunca use uma carteira com fundos reais e nunca compartilhe a frase de recuperação ou a chave privada.
 
 ## 12. Roteiro de teste para o avaliador
-<<THIAGO>>
+
+Use 3 contas na MetaMask: **Importador**, **Comprador** e **Verificador** (o verificador precisa ser nomeado pelo dono). Todos os passos são feitos na URL da Vercel.
+
+| # | Conta | Ação | Resultado esperado |
+| --- | --- | --- | --- |
+| 1 | Importador | Cadastrar "Relógio Teste", categoria Relógio, 0.001 ETH, estoque 2 | Item aparece na vitrine e em "Meus itens"; evento `ItemCadastrado` no histórico |
+| 2 | Importador | Procurar o botão Comprar no próprio item | O botão não aparece (o contrato também bloquearia com `NaoAutorizado`) |
+| 3 | Comprador | Comprar "Relógio Teste" | Painel mostra "pendente" → "confirmada" com link do Etherscan; pedido em "Meus pedidos" com status Pago |
+| 4 | Importador | Registrar o embarque com o identificador `SERIE-0001` | Status Embarcado; saldo sacável do importador = 0.0003 ETH |
+| 5 | Verificador | Liberar na alfândega com `SERIE-9999` | Erro: "O identificador não confere com o registrado no embarque. Possível falsificação!" |
+| 6 | Verificador | Liberar com ` serie-0001 ` (minúsculo e com espaços) | Funciona, porque o identificador é normalizado; status Liberado |
+| 7 | Comprador | Confirmar a entrega | Status Entregue; saldo sacável do importador = 0.00098 ETH |
+| 8 | Qualquer | Verificar a autenticidade do pedido com `SERIE-0001` | "Autêntico ✅" |
+| 9 | Qualquer | Verificar com `SERIE-9999` | "Não confere ❌" |
+| 10 | Importador | Sacar tudo | Evento `Saque`; saldo sacável vai a 0 e o saldo da carteira sobe |
 
 ---
 
