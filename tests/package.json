@@ -1,0 +1,10 @@
+{
+  "name": "importachain-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Testes automatizados do contrato ImportaChain (EVM local com ganache)",
+  "scripts": {
+    "test": "node compile.js ../contracts/ImportaChain.sol shanghai && node compile2.js && node test.js"
+  },
+  "dependencies": { "solc": "0.8.24", "ganache": "^7.9.2", "web3": "^4.0.0" }
+}
