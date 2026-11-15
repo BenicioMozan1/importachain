@@ -117,17 +117,20 @@ Todas as linhas se referem a `contracts/ImportaChain.sol`. Cada uso está marcad
 
 **Testes.** (a) Roteiro de 24 testes no Remix VM e na Sepolia. (b) Suíte automatizada em `tests/` (EVM local com ganache e Web3.js 4): 88 verificações, incluindo os 24 do roteiro, o invariante de saldo, valores com arredondamento (1, 3, 7, 99 wei), o limite de 20 itens, a janela de 50 pedidos, o ataque de reentrância e o envio direto de ETH. Para rodar: `cd tests && npm install && npm test`.
 
-**Gás medido** (EVM local, otimização desligada; os valores reais da Sepolia aparecem no Etherscan, <<PREENCHER com os da Sepolia>>):
+**Gás medido na Sepolia** (transações reais do fluxo de demonstração, otimização desligada, preço ~1,5 gwei; links e prints em `docs/prints/`). Para comparação, a coluna "EVM local" traz o valor medido na suíte de testes:
 
-| Operação | Gás |
-| --- | --- |
-| Deploy do contrato | ≈ 4.010.882 |
-| `cadastrarItem` | 192.312 |
-| `comprar` | 187.454 |
-| `registrarEmbarque` | 124.583 |
-| `liberarAlfandega` | 63.221 |
-| `confirmarEntrega` | 95.781 |
-| `sacar` | 31.022 |
+| Operação | Gás na Sepolia | EVM local | Taxa paga (ETH de teste) |
+| --- | --- | --- | --- |
+| Deploy do contrato | 28.427.216 | ≈ 4.010.882 | 0,04264 |
+| `cadastrarItem` | 919.960 – 929.984 | 192.312 | ≈ 0,0014 |
+| `atualizarItem` | 39.982 | — | ≈ 0,00006 |
+| `comprar` | 830.006 | 187.454 | ≈ 0,00125 |
+| `registrarEmbarque` | 470.463 | 124.583 | ≈ 0,0007 |
+| `liberarAlfandega` | 152.441 | 63.221 | ≈ 0,00023 |
+| `confirmarEntrega` | 280.221 | 95.781 | ≈ 0,00042 |
+| `sacar` | 31.458 | 31.022 | ≈ 0,00005 |
+
+Observação: as operações que **criam armazenamento novo** (deploy, cadastro, compra, embarque) custaram de 3x a 7x mais na Sepolia do que na EVM local, enquanto as que só alteram valores existentes (`atualizarItem`, `sacar`) ficaram praticamente iguais. Ou seja, a rede de teste cobra bem mais caro para gravar dados novos do que o ambiente local de testes. Isso reforça as escolhas do contrato de guardar só o hash (32 bytes) e de limitar listas.
 
 ---
 
