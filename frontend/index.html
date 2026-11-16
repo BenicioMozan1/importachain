@@ -1,3 +1,164 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><title>ImportaChain</title></head>
-<body><h1>ImportaChain — em construção</h1></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ImportaChain</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="largura topo">
+      <div>
+        <h1>ImportaChain</h1>
+        <p>Importação com custódia e autenticidade</p>
+      </div>
+      <div class="linha">
+        <div>
+          <p>Rede: <span id="redeStatus">Sem conexão</span></p>
+          <p><span id="endereco">Carteira desconectada</span></p>
+        </div>
+        <span id="papelUsuario"></span>
+        <span id="saldoEth"></span>
+        <button id="btnConectar" class="btn btn-primario" type="button">Conectar carteira</button>
+      </div>
+    </div>
+    <div id="alertaErro" class="largura alerta-erro oculto" role="alert"></div>
+  </header>
+
+  <main class="largura">
+    <div id="avisoRede" class="linha aviso oculto">
+      <span>Selecione a rede Sepolia na MetaMask.</span>
+      <button id="btnTrocarRede" class="btn btn-secundario" type="button">Trocar para Sepolia</button>
+    </div>
+
+    <div class="linha painel">
+      <span>Contrato <a id="linkContrato" class="endereco-curto" target="_blank" rel="noopener"></a></span>
+      <span class="total">Itens <strong><span id="totalItens"></span></strong></span>
+      <span class="total">Pedidos <strong><span id="totalPedidos"></span></strong></span>
+    </div>
+
+    <section class="painel">
+      <h2>Itens disponíveis</h2>
+      <div id="listaItens" class="grade">
+        <p class="vazio">Conecte a carteira para carregar.</p>
+      </div>
+    </section>
+
+    <section class="painel">
+      <h2>Meus pedidos</h2>
+      <div id="listaPedidosComprador" class="grade">
+        <p class="vazio">Conecte a carteira para carregar.</p>
+      </div>
+    </section>
+
+    <section class="painel">
+      <h2>Vender</h2>
+      <h3>Cadastrar item</h3>
+      <form id="formItem" class="campos">
+        <label for="inNome">Nome do item
+          <input id="inNome" class="input" type="text">
+        </label>
+        <label for="inCategoria">Categoria
+          <select id="inCategoria" class="input">
+            <option value="0">Veículo</option>
+            <option value="1">Bebida</option>
+            <option value="2">Relógio</option>
+            <option value="3">Outro</option>
+          </select>
+        </label>
+        <label for="inPreco">Preço em ETH
+          <input id="inPreco" class="input" type="number" step="0.0001" min="0">
+        </label>
+        <label for="inEstoque">Estoque
+          <input id="inEstoque" class="input" type="number" min="1">
+        </label>
+        <div><button id="btnCadastrar" class="btn btn-primario" type="submit">Cadastrar item</button></div>
+      </form>
+      <h3>Meus itens</h3>
+      <div id="listaMeusItens" class="grade">
+        <p class="vazio">Conecte a carteira para carregar.</p>
+      </div>
+      <h3>Pedidos recebidos</h3>
+      <div id="listaPedidosImportador" class="grade">
+        <p class="vazio">Conecte a carteira para carregar.</p>
+      </div>
+    </section>
+
+    <section id="secaoVerificador" class="painel oculto">
+      <h2>Alfândega</h2>
+      <div id="listaPedidosAlfandega" class="grade">
+        <p class="vazio">Conecte a carteira para carregar.</p>
+      </div>
+    </section>
+
+    <section class="painel">
+      <h2>Verificar autenticidade</h2>
+      <div class="campos">
+        <label for="inPedidoAut">ID do pedido
+          <input id="inPedidoAut" class="input" type="number" min="0">
+        </label>
+        <label for="inTextoAut">Identificador do item
+          <input id="inTextoAut" class="input" type="text" placeholder="Chassi, lote ou número de série">
+        </label>
+        <div><button id="btnVerificarAut" class="btn btn-primario" type="button">Verificar</button></div>
+      </div>
+      <div id="resultadoAut" role="status"></div>
+    </section>
+
+    <section class="painel">
+      <h2>Meu saldo</h2>
+      <p class="saldo">Saldo disponível para saque <strong><span id="saldoSacavel"></span></strong></p>
+      <label for="inSaque">Valor em ETH
+        <input id="inSaque" class="input" type="number" step="0.0001" min="0">
+      </label>
+      <div class="linha acoes">
+        <button id="btnSacar" class="btn btn-primario" type="button">Sacar</button>
+        <button id="btnSacarTudo" class="btn btn-secundario" type="button">Sacar tudo</button>
+      </div>
+    </section>
+
+    <div id="txPainel" class="painel oculto" role="status">
+      <strong><span id="txStatus"></span></strong>
+      <a id="txHash" class="endereco-curto" target="_blank" rel="noopener"></a>
+    </div>
+
+    <section class="painel">
+      <h2>Histórico de eventos</h2>
+      <div id="listaEventos">
+        <p class="vazio">Conecte a carteira para carregar.</p>
+      </div>
+    </section>
+
+    <section id="painelAdmin" class="painel oculto">
+      <h2>Painel do Dono</h2>
+      <p>Plataforma <strong><span id="estadoPausa"></span></strong></p>
+      <div class="linha">
+        <button id="btnPausar" class="btn btn-perigo" type="button">Pausar</button>
+        <button id="btnDespausar" class="btn btn-secundario" type="button">Despausar</button>
+      </div>
+      <h3>Verificadores</h3>
+      <label for="inVerificador">Endereço do verificador
+        <input id="inVerificador" class="input" type="text" placeholder="0x...">
+      </label>
+      <div class="linha acoes">
+        <button id="btnNomearVerificador" class="btn btn-primario" type="button">Nomear verificador</button>
+        <button id="btnRemoverVerificador" class="btn btn-perigo" type="button">Remover verificador</button>
+      </div>
+      <h3>Disputas</h3>
+      <label for="inDisputaId">ID do pedido
+        <input id="inDisputaId" class="input" type="number" min="0">
+      </label>
+      <div class="linha acoes">
+        <button id="btnDisputaReembolsar" class="btn btn-secundario" type="button">Reembolsar comprador</button>
+        <button id="btnDisputaPagar" class="btn btn-primario" type="button">Pagar importador</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@4/dist/web3.min.js"></script>
+  <script src="contrato.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
