@@ -464,6 +464,13 @@ function cardPedido(p, papel) {
 
 // Escritas (.send(): abrem a MetaMask)
 
+async function esperarBloco(numero) {
+  for (let i = 0; i < 15; i++) {
+    if (BigInt(await web3.eth.getBlockNumber()) >= BigInt(numero)) return;
+    await new Promise((ok) => setTimeout(ok, 1000));
+  }
+}
+
 // Função ÚNICA para todas as escritas.
 // 1) confere a rede; 2) confere se a carteira cobre o value;
 // 3) simula com .call() para pegar o revert (erro personalizado) sem abrir
@@ -498,10 +505,14 @@ async function enviarTx(metodo, opcoes = {}, descricao = "Transação") {
 
   // 4) Envia de verdade
   try {
-    await metodo.send(params)
+    const recibo = await metodo.send(params)
       .on("transactionHash", (hash) => mostrarTx("pendente", hash, descricao))
       .on("receipt", (rec) => mostrarTx("confirmada", rec.transactionHash, descricao));
-    await carregarTudo();   // atualiza a tela e o histórico de eventos
+    // O nó de leitura da MetaMask pode estar um bloco atrás: espera ele
+    // alcançar o bloco da transação antes de recarregar a tela.
+    await esperarBloco(recibo.blockNumber);
+    await carregarTudo();
+    setTimeout(carregarTudo, 4000);
     return true;
   } catch (err) {
     console.log("Envio falhou:", err);
