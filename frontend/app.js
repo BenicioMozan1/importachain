@@ -1,10 +1,4 @@
-// =====================================================================
-// ImportaChain — app.js
-// Liga a interface (index.html) ao contrato ImportaChain implantado na
-// Sepolia, usando a Web3.js 4.x (global Web3, carregada via CDN) e a
-// MetaMask (window.ethereum).
-// Depende de contrato.js (objeto global CONTRATO), que é carregado antes.
-// =====================================================================
+// ImportaChain: liga a interface ao contrato na Sepolia (Web3.js + MetaMask).
 
 // ===== Constantes (espelham os enums do contrato, na mesma ordem) =====
 // Os enums chegam da Web3.js como BigInt: use Number() antes de indexar.
@@ -22,9 +16,7 @@ let itensCache = {};  // itemId → Item (preenchido em carregarItens; dá o nom
 // Atalho para buscar elementos pelos IDs combinados com o Davi
 const $ = (id) => document.getElementById(id);
 
-// =====================================================================
 // Inicialização
-// =====================================================================
 
 // Verifica a MetaMask, cria web3 e o objeto do contrato, registra os
 // listeners, liga os botões e, se a conta já foi autorizada antes
@@ -99,9 +91,7 @@ function cliqueNaLista(e) {
   if (ACOES_DAS_LISTAS[acao]) comBotao(botao, () => ACOES_DAS_LISTAS[acao](Number(idTexto)));
 }
 
-// =====================================================================
 // Carteira e rede
-// =====================================================================
 
 // Pede à MetaMask acesso às contas (abre o popup), guarda a primeira
 // conta e carrega os dados da tela.
@@ -200,9 +190,7 @@ function semMetaMask() {
   document.querySelectorAll("button").forEach((b) => (b.disabled = true));
 }
 
-// =====================================================================
 // Leituras (.call(): grátis, não abrem a MetaMask)
-// =====================================================================
 
 // Recarrega tudo o que aparece na tela. Chamado ao conectar, ao trocar
 // de conta e depois de cada transação confirmada.
@@ -327,11 +315,8 @@ async function carregarAdmin() {
   $("estadoPausa").textContent = pausado ? "Pausada" : "Ativa";
 }
 
-// Histórico: getPastEvents a partir do bloco do deploy (nunca do bloco 0),
-// mais recentes primeiro, no máximo 30, cada um com link para a transação.
-// O RPC da MetaMask (Infura) só aceita janelas de até 10.000 blocos por
-// consulta, então buscamos em fatias, do bloco mais novo para o mais antigo,
-// e paramos assim que juntamos MAX_EVENTOS ou chegamos ao bloco do deploy.
+// Histórico de eventos. O RPC da MetaMask aceita no máximo 10.000 blocos
+// por consulta, então a busca é feita em fatias, do bloco mais novo ao deploy.
 const JANELA_BLOCOS = 9000n;
 
 async function buscarEventosRecentes() {
@@ -346,7 +331,6 @@ async function buscarEventosRecentes() {
       eventos.unshift(...fatia);
       fim = de - 1n;
     } catch (err) {
-      // Se o provedor tiver um limite menor, reduz a janela e tenta de novo
       if (janela > 500n && /range|limit|exceed|too many/i.test(String(err && (err.message || err)))) {
         janela = janela / 2n;
         continue;
@@ -364,7 +348,6 @@ async function carregarEventos() {
   try {
     eventos = await buscarEventosRecentes();
   } catch (err) {
-    // Falha no histórico não pode impedir o resto da página de carregar
     console.error("Falha ao carregar eventos:", err);
     lista.innerHTML = `<${tag} class="vazio">Não foi possível carregar o histórico agora. Veja os eventos no Etherscan.</${tag}>`;
     return;
@@ -409,9 +392,7 @@ function descreverEvento(ev) {
   }
 }
 
-// =====================================================================
 // Montagem dos cards (HTML gerado pelo JS, com as classes do Davi)
-// =====================================================================
 
 // Card da vitrine. O botão comprar-<id> só aparece se a conta não for o
 // importador e o item tiver estoque.
@@ -422,7 +403,7 @@ function cardItemVitrine(it) {
   return `
     <div class="card card-item">
       <h3>${escaparHtml(it.nome)}</h3>
-      <p><span class="badge">${CATEGORIAS[Number(it.categoria)]}</span> Item #${id}</p>
+      <p class="categoria">${CATEGORIAS[Number(it.categoria)]} · Item #${id}</p>
       <p>Preço: <strong>${formatarEth(it.preco)} ETH</strong></p>
       <p>Estoque: ${it.estoque.toString()}</p>
       <p>Importador: <span class="endereco-curto" title="${escaparHtml(it.importador)}">${abreviar(it.importador)}</span></p>
@@ -439,7 +420,7 @@ function cardMeuItem(it) {
   return `
     <div class="card card-item">
       <h3>${escaparHtml(it.nome)}</h3>
-      <p><span class="badge">${CATEGORIAS[Number(it.categoria)]}</span> Item #${id} · ${it.ativo ? "Ativo" : "Inativo"}</p>
+      <p class="categoria">${CATEGORIAS[Number(it.categoria)]} · Item #${id} · ${it.ativo ? "Ativo" : "Inativo"}</p>
       <p>Preço: <strong>${formatarEth(it.preco)} ETH</strong> · Estoque: ${it.estoque.toString()}</p>
       ${botao}
     </div>`;
@@ -481,9 +462,7 @@ function cardPedido(p, papel) {
     </div>`;
 }
 
-// =====================================================================
 // Escritas (.send(): abrem a MetaMask)
-// =====================================================================
 
 // Função ÚNICA para todas as escritas.
 // 1) confere a rede; 2) confere se a carteira cobre o value;
@@ -655,9 +634,7 @@ async function comBotao(botao, acao) {
   }
 }
 
-// =====================================================================
 // Tradução de erros
-// =====================================================================
 
 // Textos dos require do contrato → mensagem para o usuário
 const MENSAGENS_REQUIRE = {
@@ -773,9 +750,7 @@ function mensagemDoRequire(texto) {
   return null;
 }
 
-// =====================================================================
 // Utilidades
-// =====================================================================
 
 // O hash precisa ser gerado do MESMO jeito pelo importador, pelo verificador
 // e por quem confere a autenticidade: normaliza (trim + maiúsculas) e usa o
@@ -858,9 +833,7 @@ function listaVazia(lista, texto) {
   lista.innerHTML = `<p class="vazio">${escaparHtml(texto)}</p>`;
 }
 
-// =====================================================================
 // Listeners da MetaMask
-// =====================================================================
 
 // Troca de conta: lista vazia = desconectou; senão usa a nova conta
 async function aoTrocarConta(contas) {
