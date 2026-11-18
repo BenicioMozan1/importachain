@@ -2,25 +2,37 @@
 
 > dApp de importação de itens de alto valor (carros, bebidas, relógios) com custódia do pagamento em etapas e certificado de autenticidade por hash, na rede de teste Ethereum Sepolia.
 
-🔗 **dApp (Vercel):** https://importachain-frontend.vercel.app
-📜 **Contrato (Sepolia):** [0x9Ca0D97075997a044Bc7e6bee87E69680d980919](https://sepolia.etherscan.io/address/0x9Ca0D97075997a044Bc7e6bee87E69680d980919)
-🎥 **Vídeo de demonstração:** <<PREENCHER: link>>
+**dApp (Vercel):** https://importachain-frontend.vercel.app
 
-> **Guia de preenchimento:** as seções 5 a 8 são do Benicio (já escritas, falta só preencher os dados do deploy na seção 5). As seções 1 a 4, 13, 14 e 15 são do Davi. As seções 9 a 12 são do Thiago. Apague esta nota e os marcadores `<<PREENCHER>>` antes da entrega.
+**Contrato (Sepolia):** [0x9Ca0D97075997a044Bc7e6bee87E69680d980919](https://sepolia.etherscan.io/address/0x9Ca0D97075997a044Bc7e6bee87E69680d980919)
+
+**Vídeo de demonstração:** link pendente
 
 ---
 
 ## 1. Tema e problema resolvido
-<<DAVI>>
+
+A ImportaChain usa um contrato para guardar o pagamento em ETH de compras de itens importados. O importador recebe 30% no embarque e o restante na entrega, com desconto da taxa de 2%.
+
+O verificador confere o chassi, lote ou número de série na alfândega. Qualquer pessoa pode comparar o identificador com o hash registrado no pedido.
 
 ## 2. Integrantes e papéis
-<<DAVI>>
+
+- **Benicio:** contrato, testes no Remix e deploy na Sepolia e na Vercel.
+- **Davi:** HTML, CSS, README, diagramas, slides e vídeo da demonstração.
+- **Thiago:** integração com Web3.js e testes do frontend.
 
 ## 3. Arquitetura
-<<DAVI: diagrama>>
+
+![O usuário acessa o frontend na Vercel. A MetaMask assina as transações do contrato na Sepolia. As transações e os eventos aparecem no Etherscan.](docs/arquitetura-c4-drawio.png)
+
+[Modelo C4 do draw.io](https://github.com/jgraph/drawio-diagrams/blob/dev/blog/C4.drawio)
 
 ## 4. Diagrama de estados do pedido
-<<DAVI: diagrama>>
+
+![O pedido passa por Pago, Embarcado, Liberado e Entregue. Pode ser cancelado pelo comprador antes do embarque ou pelo dono ao resolver uma disputa.](docs/estados-do-pedido-uml-drawio.png)
+
+[Modelo de estados do draw.io](https://github.com/jgraph/drawio/blob/dev/src/main/webapp/templates/uml/state_machine.xml)
 
 ---
 
@@ -184,17 +196,36 @@ Use 3 contas na MetaMask: **Importador**, **Comprador** e **Verificador** (o ver
 | 5 | Verificador | Liberar na alfândega com `SERIE-9999` | Erro: "O identificador não confere com o registrado no embarque. Possível falsificação!" |
 | 6 | Verificador | Liberar com ` serie-0001 ` (minúsculo e com espaços) | Funciona, porque o identificador é normalizado; status Liberado |
 | 7 | Comprador | Confirmar a entrega | Status Entregue; saldo sacável do importador = 0.00098 ETH |
-| 8 | Qualquer | Verificar a autenticidade do pedido com `SERIE-0001` | "Autêntico ✅" |
-| 9 | Qualquer | Verificar com `SERIE-9999` | "Não confere ❌" |
+| 8 | Qualquer | Verificar a autenticidade do pedido com `SERIE-0001` | "Autêntico" |
+| 9 | Qualquer | Verificar com `SERIE-9999` | "Não confere" |
 | 10 | Importador | Sacar tudo | Evento `Saque`; saldo sacável vai a 0 e o saldo da carteira sobe |
 
 ---
 
 ## 13. Limitações conhecidas e melhorias futuras
-<<DAVI>>
+
+- Cada pedido tem uma unidade. Cada importador pode cadastrar até 20 itens, e a lista do comprador mostra os últimos 50 pedidos.
+- Os preços ficam em ETH. Uma melhoria seria mostrar o valor em reais.
 
 ## 14. Declaração de uso de IA
-<<DAVI>>
+
+Usamos IA para discutir ideias, revisar o código e ajudar nos testes. Ela também ajudou no frontend e na documentação.
 
 ## 15. Estrutura do repositório
-<<DAVI>>
+
+```text
+importachain/
+├── contracts/
+│   └── ImportaChain.sol
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js
+│   └── contrato.js
+├── docs/
+│   ├── arquitetura-c4-drawio.png
+│   ├── estados-do-pedido-uml-drawio.png
+│   └── prints/
+├── tests/
+└── README.md
+```
