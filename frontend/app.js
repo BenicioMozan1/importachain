@@ -329,14 +329,47 @@ async function carregarAdmin() {
 
 // Histórico: getPastEvents a partir do bloco do deploy (nunca do bloco 0),
 // mais recentes primeiro, no máximo 30, cada um com link para a transação.
+// O RPC da MetaMask (Infura) só aceita janelas de até 10.000 blocos por
+// consulta, então buscamos em fatias, do bloco mais novo para o mais antigo,
+// e paramos assim que juntamos MAX_EVENTOS ou chegamos ao bloco do deploy.
+const JANELA_BLOCOS = 9000n;
+
+async function buscarEventosRecentes() {
+  const inicio = BigInt(CONTRATO.blocoDeploy);
+  let fim = BigInt(await web3.eth.getBlockNumber());
+  let janela = JANELA_BLOCOS;
+  const eventos = [];
+  while (fim >= inicio && eventos.length < MAX_EVENTOS) {
+    const de = fim - janela + 1n > inicio ? fim - janela + 1n : inicio;
+    try {
+      const fatia = await contrato.getPastEvents("allEvents", { fromBlock: de, toBlock: fim });
+      eventos.unshift(...fatia);
+      fim = de - 1n;
+    } catch (err) {
+      // Se o provedor tiver um limite menor, reduz a janela e tenta de novo
+      if (janela > 500n && /range|limit|exceed|too many/i.test(String(err && (err.message || err)))) {
+        janela = janela / 2n;
+        continue;
+      }
+      throw err;
+    }
+  }
+  return eventos;
+}
+
 async function carregarEventos() {
-  const eventos = await contrato.getPastEvents("allEvents", {
-    fromBlock: CONTRATO.blocoDeploy,
-    toBlock: "latest",
-  });
-  const recentes = eventos.slice(-MAX_EVENTOS).reverse();
   const lista = $("listaEventos");
   const tag = /^(UL|OL)$/.test(lista.tagName) ? "li" : "div";
+  let eventos;
+  try {
+    eventos = await buscarEventosRecentes();
+  } catch (err) {
+    // Falha no histórico não pode impedir o resto da página de carregar
+    console.error("Falha ao carregar eventos:", err);
+    lista.innerHTML = `<${tag} class="vazio">Não foi possível carregar o histórico agora. Veja os eventos no Etherscan.</${tag}>`;
+    return;
+  }
+  const recentes = eventos.slice(-MAX_EVENTOS).reverse();
 
   if (recentes.length === 0) {
     lista.innerHTML = `<${tag} class="vazio">Nenhum evento ainda</${tag}>`;
