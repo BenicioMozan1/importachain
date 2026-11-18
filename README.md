@@ -6,7 +6,7 @@
 
 **Contrato (Sepolia):** [0x9Ca0D97075997a044Bc7e6bee87E69680d980919](https://sepolia.etherscan.io/address/0x9Ca0D97075997a044Bc7e6bee87E69680d980919)
 
-**Vídeo de demonstração:** link pendente
+**Vídeo de demonstração (3min20, legendado):** [docs/demo.mp4](docs/demo.mp4)
 
 ---
 
@@ -225,6 +225,8 @@ importachain/
 ├── docs/
 │   ├── arquitetura-c4-drawio.png
 │   ├── estados-do-pedido-uml-drawio.png
+│   ├── slides.pdf
+│   ├── demo.mp4
 │   └── prints/
 ├── tests/
 └── README.md
